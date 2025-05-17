@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT Dashboard</title>
+</head>
+<body>
+    <h1>MQTT Dashboard</h1>
+    <div id="data">Conectando...</div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:3000');
+        
+        ws.onmessage = function(event) {
+            const dataDiv = document.getElementById('data');
+            dataDiv.textContent = `Dados: ${event.data}`;
+        };
+
+        ws.onopen = function() {
+            console.log('Conectado ao WebSocket');
+        };
+
+        ws.onclose = function() {
+            console.log('Desconectado do WebSocket');
+        };
+    </script>
+</body>
+</html>

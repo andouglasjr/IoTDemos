@@ -1,0 +1,87 @@
+Para configurar o Mosquitto (um popular broker MQTT) para usar TLS (Transport Layer Security), você precisará seguir alguns passos para configurar o certificado e ajustar as configurações do Mosquitto. Abaixo está um guia passo a passo para configurar o Mosquitto para suportar TLS.
+
+Passo 1: Gerar Certificados e Chaves
+Primeiro, você precisa de um certificado de autoridade (CA) e certificados para o servidor e o cliente. Se você não tiver certificados prontos, você pode gerar os seguintes:
+
+Certificado CA: Usado para assinar os certificados do servidor e do cliente.
+Certificado do Servidor: Assinado pela CA e usado pelo broker Mosquitto.
+Chave do Servidor: Chave privada correspondente ao certificado do servidor.
+Certificado do Cliente: Assinado pela CA e usado pelos clientes MQTT.
+Chave do Cliente: Chave privada correspondente ao certificado do cliente.
+Você pode gerar esses arquivos usando OpenSSL com os seguintes comandos:
+
+--------------------------------------------------------------------------------------------------------
+# Gerar certificado CA
+openssl genrsa -out ca.key 2048
+openssl req -new -x509 -days 365 -key ca.key -out ca.crt
+
+# Gerar certificado do servidor
+openssl genrsa -out server.key 2048
+openssl req -new -key server.key -out server.csr
+openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365
+
+# Gerar certificado do cliente
+openssl genrsa -out client.key 2048
+openssl req -new -key client.key -out client.csr
+openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client.crt -days 365
+--------------------------------------------------------------------------------------------------------
+
+Passo 2: Configurar o Mosquitto
+Com os certificados gerados, configure o Mosquitto para usar TLS. Edite o arquivo de configuração do Mosquitto, geralmente encontrado em /etc/mosquitto/mosquitto.conf ou /etc/mosquitto/conf.d/default.conf.
+
+Aqui está um exemplo de configuração TLS:
+--------------------------------------------------------------------------------------------------------
+# Habilitar TLS
+listener 8883
+protocol mqtt
+
+# Caminho para os arquivos de certificado
+cafile /etc/mosquitto/certs/ca.crt
+certfile /etc/mosquitto/certs/server.crt
+keyfile /etc/mosquitto/certs/server.key
+
+# Configurações adicionais (opcional)
+require_certificate false
+tls_version tlsv1.2
+--------------------------------------------------------------------------------------------------------
+
+Explicação das Configurações:
+listener 8883: Define a porta na qual o Mosquitto escutará as conexões TLS. A porta padrão para MQTT com TLS é 8883.
+protocol mqtt: Define o protocolo usado.
+cafile: Caminho para o arquivo de certificado da autoridade certificadora (CA).
+certfile: Caminho para o certificado do servidor.
+keyfile: Caminho para a chave privada do servidor.
+require_certificate: Define se o cliente deve apresentar um certificado. Configurado como false para conexões sem autenticação de cliente.
+tls_version: Define a versão do TLS a ser usada.
+
+Passo 3: Reiniciar o Mosquitto
+Após configurar o Mosquitto, reinicie o serviço para aplicar as novas configurações:
+--------------------------------------------------------------------------------------------------------
+sudo systemctl restart mosquitto
+--------------------------------------------------------------------------------------------------------
+
+Passo 4: Configurar o Cliente MQTT
+
+No lado do cliente, você também precisa configurar o cliente MQTT para usar TLS. Aqui está um exemplo usando a biblioteca paho-mqtt em Python:
+
+import paho.mqtt.client as mqtt
+import ssl
+
+client = mqtt.Client()
+
+# Configuração de TLS
+client.tls_set(ca_certs="/path/to/ca.crt",
+               certfile="/path/to/client.crt",
+               keyfile="/path/to/client.key",
+               tls_version=ssl.PROTOCOL_TLSv1_2)
+client.tls_insecure_set(False)  # Verifica a validade dos certificados
+
+# Conectar ao broker MQTT
+client.connect("mqtt.broker.address", 8883, 60)
+client.loop_start()
+--------------------------------------------------------------------------------------------------------
+
+Explicação da Configuração do Cliente:
+tls_set: Define os caminhos para os arquivos de certificados e chave.
+tls_insecure_set(False): Verifica a validade dos certificados. Defina como True apenas se você estiver testando e não se preocupar com a validade dos certificados.
+

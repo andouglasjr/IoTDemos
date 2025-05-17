@@ -1,0 +1,54 @@
+//Estruturas Básicas
+
+//Inteiro
+"ano": 2024
+
+//Real
+"altura": 1.65
+
+//String
+"nome": "Full-Stack"
+
+//Boolean
+"isLoading": true
+
+//Estruturas Complexas
+
+//Arrays
+"UF":["BA","RN", "PE", "PB"]
+
+//Matriz
+"identidade":
+[
+    [1,0,0],
+    [0,1,0],
+    [0,0,1]
+]
+
+//Objetos
+{
+    "titulo": "Full-Stack",
+    "carga-horaria": 160,
+    "professores": [
+        "Andouglas",
+        "Thiago"
+    ]
+}
+
+//Array de Objetos
+[{
+    "titulo": "Full-Stack",
+    "carga-horaria": 160,
+    "professores": [
+        "Andouglas",
+        "Thiago"
+    ]
+},{
+    "titulo": "Back-End",
+    "carga-horaria": 200,
+    "professores": [
+        "Lucas"
+    ]
+}]
+
+npm install axios
