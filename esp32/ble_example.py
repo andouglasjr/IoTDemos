@@ -43,7 +43,7 @@ class BLEServer:
             self._advertise()
 
     def _advertise(self, interval_us=500000):
-        name = 'ESP32_BLE'
+        name = 'PiPico_BLE'
         self._ble.gap_advertise(interval_us, adv_data=self._ble.gap_advertise(adv_data=b'\x02\x01\x06' + bytes((len(name) + 1, 0x09)) + bytes(name, 'utf-8')))
 
     def update_data(self, data):

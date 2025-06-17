@@ -1,30 +1,50 @@
-import socket
+
+import network
 import time
-import random
+import socket
 
-HOST = '192.168.0.113'  # Endereço IP do servidor (localhost)
-PORT = 12345  # Porta que o servidor está escutando
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.bind((HOST, PORT))
-    s.listen()
-    print("Servidor ouvindo na porta", PORT)
-    conn, addr = s.accept()
-    with conn:
-        print('Conectado por', addr)
-        try:
-            while True:
-                # Gera um valor aleatório
-                random_value = random.randint(0, 100)
-                # Converte o valor aleatório para string e codifica para bytes
-                message = str(random_value)+'\n'
-                message = message.encode()
-                conn.sendall(message)
-                # Espera 1 segundo antes de enviar o próximo valor
-                time.sleep(1)
-        except ConnectionResetError:
-            # Caso o cliente se desconecte
-            print("Cliente desconectado")
-        except Exception as e:
-            # Outros possíveis erros
-            print(f"Erro: {e}")
+def web_page():
+    html = """<html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+            <body><h1>Hello World</h1></body></html>
+            """
+    return html
+
+# if you do not see the network you may have to power cycle
+# unplug your pico w for 10 seconds and plug it in again
+def ap_mode(ssid, password):
+    """
+        Description: This is a function to activate AP mode
+
+        Parameters:
+
+        ssid[str]: The name of your internet connection
+        password[str]: Password for your internet connection
+
+        Returns: Nada
+    """
+    # Just making our internet connection
+    ap = network.WLAN(network.AP_IF)
+    ap.config(essid=ssid, password=password)
+    ap.active(True)
+
+    while ap.active() == False:
+        pass
+    print('AP Mode Is Active, You can Now Connect')
+    print('IP Address To Connect to:: ' + ap.ifconfig()[0])
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)   #creating socket object
+    s.bind(('', 80))
+    s.listen(5)
+
+    while True:
+        conn, addr = s.accept()
+        print('Got a connection from %s' % str(addr))
+        request = conn.recv(1024)
+        print('Content = %s' % str(request))
+        response = web_page()
+        conn.send(response)
+        conn.close()
+
+ap_mode('laica_iot',
+        '12345678')

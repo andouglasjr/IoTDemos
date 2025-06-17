@@ -23,7 +23,7 @@ async def main(ble_address, char_uuid):
             print("Não foi possível conectar ao dispositivo.")
 
 # Substitua pelos valores do seu dispositivo
-ble_address = "24:6F:28:17:CA:92"
+ble_address = "28:CD:C1:0F:8E:39"
 char_uuid = "12345678-1234-5678-1234-56789abcdef1"
 
 # Executar o loop principal
