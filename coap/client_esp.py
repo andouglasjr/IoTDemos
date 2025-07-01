@@ -5,7 +5,7 @@ import time
 # Conecta à rede Wi-Fi
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
-wlan.connect('laica_iot_ap', '12345678')
+wlan.connect('laica', '12345678')
 while not wlan.isconnected():
     pass
 
@@ -14,7 +14,7 @@ coap = Coap()
 coap.start()
 
 # Define o IP do servidor CoAP e a porta
-server_ip = '192.168.137.94'
+server_ip = '192.168.137.57'
 server_port = 5683
 
 def send_data(payload):
