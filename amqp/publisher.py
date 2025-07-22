@@ -6,7 +6,7 @@ channel = connection.channel()
 
 # Envia uma mensagem para a fila
 channel.basic_publish(exchange='topic',
-        routing_key='ker.error',
+        routing_key='users.warn',
                       body='Only testing!')
 
 print(" [x] Sent 'Only testing!'")
