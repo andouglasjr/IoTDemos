@@ -6,8 +6,8 @@ import struct
 import machine
 
 # Configuração dos Pinos do Joystick na BitDogLab
-JOYSTICK_X_PIN = 27 # ADC0
-JOYSTICK_Y_PIN = 26 # ADC1
+JOYSTICK_X_PIN = 26 # ADC0
+JOYSTICK_Y_PIN = 27 # ADC1
 JOYSTICK_BTN_PIN = 22 # Botão (Push button)
 
 adc_x = machine.ADC(JOYSTICK_X_PIN)

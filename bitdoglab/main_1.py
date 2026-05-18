@@ -1,44 +1,35 @@
 import time
 import network
-import dht
-from machine import Pin, SoftI2C
+import ahtx0 as ahtx0
+from ssd1306 import SSD1306_I2C
 import json
-import ssd1306, framebuf
+from machine import Pin, I2C, SoftI2C
 
 from umqtt.simple import MQTTClient
 
 # Configuraes do sensor DHT11
 DHT_PIN = 15  # GPIO onde o sensor DHT11 est conectado
 
-# atribuição de pinos da Franzininho 
-i2c = SoftI2C(scl=Pin(9), sda=Pin(8))
-
-# criando simbolo para representar graus no display
-degree = bytearray([0x00, 0x0e, 0x11, 0x11, 0x0e, 0x00, 0x00, 0x00])
-fb = framebuf.FrameBuffer(degree, 8, 8, framebuf.MONO_HLSB)
-
-# configurando display
-oled_width = 128
-oled_height = 64
-oled = ssd1306.SSD1306_I2C(oled_width, oled_height, i2c)
+# Inicializa o i2c
+i2c0 = I2C(0, scl=Pin(1), sda=Pin(0), freq=400000)
+i2c = SoftI2C(scl=Pin(15), sda=Pin(14))
+oled = SSD1306_I2C(128, 64, i2c)  # Inicializa o display OLED
 oled.fill(0)  # Limpa o display OLED
 
-# Inicializa o sensor DHT11
-sensor = dht.DHT11(Pin(DHT_PIN))
+
+sensor = ahtx0.AHT10(i2c0) # Inicializa o sensor AHT10
 
 # Configuraes do MQTT
 #Endereo do broker MQTT
-MQTT_BROKER = "10.49.10.253"
+MQTT_BROKER = "192.168.0.101"
 MQTT_PORT = 1883 
-MQTT_TOPIC_TEMPERATURE = b"/sensor/franzininho/" 
+MQTT_TOPIC_TEMPERATURE = b"/sensor/bitdoglab/" 
 MQTT_TOPIC_HUMIDITY = b"sensor/humidity" 
 
 MQTT_TOPIC_SUB = b"/projeto/#"
 CLIENT_ID = "client_id"
-#USER = "iot"
-#PASSWORD = "12345678"
-USER = "user1"
-passWORD = "mosquitto1"
+USER = "iot"
+PASSWORD = "12345678"
 
 # Funcao para lidar com mensagens recebidas
 def sub_cb(topic, msg):
@@ -46,17 +37,19 @@ def sub_cb(topic, msg):
 
 # Conexo com a rede WiFi
 def connect_wifi():
-  print("Connecting to WiFi", end="")
-  oled.text("Connecting to WiFi", 0, 0)
-  oled.show()
-  wlan = network.WLAN(network.STA_IF)
-  wlan.active(True)
-  wlan.connect("laica_iot", "12345678")
-  while not wlan.isconnected():
-    print(".", end="")
-    time.sleep(0.1)
-  print(" Connected!")
-  print(wlan.ifconfig())    
+    print("Connecting to WiFi", end="")
+    oled.text("Connecting to WiFi", 0, 0)
+    oled.show()
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    wlan.connect("laica_iot", "12345678")
+    while not wlan.isconnected():
+        print(".", end="")
+        time.sleep(0.1)
+    print(" Connected!")
+    oled.text("Connected!", 0, 10)
+    oled.show()
+    print(wlan.ifconfig())    
 
 # Conexao com o broker MQTT
 def connect_mqtt():
@@ -85,26 +78,27 @@ def subscribe_topics(client):
 def publish_data(client):
     try:
         print("Publishing data", end="")
-        oled.fill(0)  # Limpa o display OLED
-        oled.text("Publishing data", 0, 0)
-        sensor.measure()  # Realiza a leitura do sensor DHT11
-        temperature = sensor.temperature()  # Obtém a temperatura
-        humidity = sensor.humidity()  # Obtém a umidade
+        temp = sensor.temperature  # Obtém a temperatura
+        humidity = sensor.relative_humidity  # Obtém a umidade
+
         payload = json.dumps({
-            "temperature": temperature,
+            "temperature": temp,
             "humidity": humidity
         })
-        oled.text("Temp: {:.2f} C".format(temperature), 0, 10)
-        oled.text("Humidity: {:.2f} %".format(humidity), 0, 20)
     
+        #msg_temp = f"temperature, id=100 temp={temperature}".format(temperature)
+        #msg_humidity = f"humidity, id=100 humidity={humidity}".format(humidity)
         client.publish(MQTT_TOPIC_TEMPERATURE, payload.encode())
-        oled.text("Published", 0, 30)
-        oled.show()  # Atualiza o display OLED  
+        #client.publish(MQTT_TOPIC_HUMIDITY, str(sensor.relative_humidity).encode())
         print(" Data published!")
-    except Exception as e: 
+        oled.fill(0)  # Limpa o display OLED
+        oled.text("Temp: {:.2f} C".format(temp), 0, 0)
+        oled.text("Humidity: {:.2f} %".format(humidity), 0, 10)
+        oled.show()  # Atualiza o display OLED
+    except Exception as e:
         print("Failed to publish data:", e)
-        oled.text("Failed to publish", 0, 30)
-        oled.show()
+        oled.text("Failed to publish", 0, 20)
+        oled.show()  
 
 
 print("Starting MQTT Subscriber")
